@@ -1,5 +1,5 @@
 * {
-  margin: o;
+  margin: 0;
   padding: 0;
 }
 
@@ -27,6 +27,7 @@ body {
   align-items: flex-end;
   text-align: right;
   width: 100%;
+  margin-top: 3rem;
 }
 
 .containerAddTodo {
@@ -78,12 +79,30 @@ button {
 #todoList {
   grid-area: right;
   width: 100%;
+  margin-top: 1.5rem;
 }
 
 .todoItem {
+  display: flex;
+  align-items: center;
   background-color: rgb(135, 189, 135);
   padding: 10px;
   margin: 5px;
   border-radius: 5px;
   width: fit-content;
+}
+
+#errorSection {
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+
+.alert {
+  background-color: rgb(247, 102, 102);
+  color: white;
+  width: 100%;
+  margin: 0;
+  text-align: center;
+  padding: 3px 0;
 }

@@ -1,7 +1,7 @@
 const apiUrl = "http://localhost:3000/";
-/* const data = { description: "clean the toilet", done: false }; */
 const todoList = document.getElementById("todoList");
 const addButton = document.getElementById("addButton");
+displayTodoItems();
 
 //###################################################
 //## Eventlisteners
@@ -11,91 +11,37 @@ addButton.addEventListener("click", function () {
 
 todoList.addEventListener("click", function (e) {
   const target = e.target;
-  const targetId = target.parentElement.id;
-  //console.log(targetId);
+  targetId = target.parentElement.id;
   if (target.matches("input")) {
-    const oldValue = target.value;
-    console.log(`old text: ${oldValue}`);
+    keyEventExecuted = false;
+    oldValue = target.value;
     target.addEventListener("blur", function () {
-      const newvalue = target.value;
-      if (newvalue !== oldValue) {
-        console.log(`edited text: ${newvalue}`);
-        putRequest(newvalue, targetId);
-        displayTodoItems();
+      if (keyEventExecuted !== true) {
+        checkDifferenceAndEdit(target, targetId);
+      } else {
+        return;
       }
     });
   } else if (target.matches("i")) {
-    deleteRequest(targetId);
-    displayTodoItems();
+    deleteItem(targetId);
+  }
+});
+window.addEventListener("keyup", (e) => {
+  if (e.keyCode === 13) {
+    target = e.target;
+    if (target.parentElement.classList.contains(`containerAddTodo`)) {
+      addTodo();
+    } else if (target.parentElement.classList.contains(`todoItem`)) {
+      checkDifferenceAndEdit(target, targetId);
+      keyEventExecuted = true;
+    }
   }
 });
 
-//################################################
-// ##Request functions
-const postRequest = function (postData) {
-  const jsObj = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(postData),
-  };
-  fetch(apiUrl, jsObj);
-};
-
-async function getRequest() {
-  try {
-    const jsObj = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    todoItems = await fetch(apiUrl, jsObj).then((response) => response.json());
-    return todoItems;
-  } catch {
-    console.log("error: Could not get list of todos");
-  }
-}
-
-async function deleteRequest(todoId) {
-  try {
-    const apiUrlDelete = apiUrl + todoId;
-    console.log(apiUrlDelete);
-    const jsObj = {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    await fetch(apiUrl + todoId, jsObj);
-  } catch {
-    console.log("Error: could not delete item.");
-  }
-}
-
-async function putRequest(putData, todoId) {
-  try {
-    console.log("starting PUT request");
-    console.log(`todo text: ${putData}`);
-    console.log(`to change in todo Id: ${todoId}`);
-    const jsObj = {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(putData),
-    };
-    await fetch(apiUrl + todoId, jsObj);
-  } catch {
-    console.log("Error: Could not update Item.");
-  }
-}
-
+//####################################################
 // ##Support functions
 async function displayTodoItems() {
   await getRequest();
-  //console.log(todoItems);
   clearList();
   const arrayLength = todoItems.length;
   for (let i = 0; i < arrayLength; i++) {
@@ -105,7 +51,6 @@ async function displayTodoItems() {
     const newInput = document.createElement("input");
     newInput.setAttribute("type", "text");
     newInput.setAttribute("Value", `${todoItems[i].description}`);
-    //newInput.setAttribute("readonly", "true");
     const newi = document.createElement("i");
     newi.classList.add("fa-solid");
     newi.classList.add("fa-trash-can");
@@ -113,21 +58,7 @@ async function displayTodoItems() {
     newDiv.appendChild(newInput);
     newDiv.appendChild(newi);
   }
-  /* todoItems.foreach((todo) => {
-    const todoList = document.getElementById("todoList");
-    const newDiv = document.createElement("div");
-    newDiv.classList.add("todoItem");
-    const newInput = docuemnt.createElement("input");
-    newInput.innerhtml = `<input type="text" value="${todo.description}" readonly>`;
-    newInput.type;
-    const newi = document.createElement("i");
-    newi.classList.add("fa-solid fa-trash-can");
-    todoList.appendChild(newDiv);
-    newDiv.appendChild(newInput);
-    newDiv.appendChild(newi);
-  }); */
 }
-displayTodoItems();
 
 const clearList = function () {
   let domItems = todoList.children;
@@ -139,8 +70,57 @@ const clearList = function () {
 
 async function addTodo() {
   const inputTag = document.getElementById(`todoInput`);
-  const data = { description: inputTag.value, done: false };
-  postRequest(data);
-  displayTodoItems();
-  inputTag.value = "";
+  if (inputTag.value !== "") {
+    preShowInDom();
+    const data = { description: inputTag.value, done: false };
+    postRequest(data);
+    displayTodoItems();
+    inputTag.value = "";
+    /* setTimeout(() => {
+      postRequest(data);
+      displayTodoItems();
+      inputTag.value = "";
+    }, 2000); */
+  } else {
+    errorHandler("Please enter a Todo before adding it to the list!");
+  }
 }
+
+const errorHandler = (error) => {
+  const errorSection = document.getElementById("errorSection");
+  const newP = document.createElement("p");
+  newP.textContent = error;
+  newP.classList.add("alert");
+  errorSection.appendChild(newP);
+  setTimeout(() => {
+    errorSection.removeChild(newP);
+  }, 5000);
+};
+
+const checkDifferenceAndEdit = function (target, targetId) {
+  const newvalue = target.value;
+  if (newvalue !== oldValue) {
+    putRequest({ description: newvalue }, targetId);
+    displayTodoItems();
+    target.removeEventListener("blur", function () {
+      checkDifferenceAndEdit(target, targetId);
+    });
+  }
+};
+
+async function deleteItem(targetId) {
+  const deletedItem = document.getElementById(targetId);
+  todoList.removeChild(deletedItem);
+  await deleteRequest(targetId);
+  displayTodoItems();
+}
+
+const preShowInDom = function () {
+  const newDiv = document.createElement("div");
+  newDiv.classList.add("todoItem");
+  const newInput = document.createElement("input");
+  newInput.setAttribute("type", "text");
+  newInput.setAttribute("Value", target.value);
+  todoList.appendChild(newDiv);
+  newDiv.appendChild(newInput);
+};
