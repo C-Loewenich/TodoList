@@ -5,12 +5,13 @@ displayTodoItems();
 
 //###################################################
 //## Eventlisteners
-addButton.addEventListener("click", function () {
+addButton.addEventListener("click", function (e) {
+  target = e.target;
   addTodo();
 });
 
 todoList.addEventListener("click", function (e) {
-  const target = e.target;
+  target = e.target;
   targetId = target.parentElement.id;
   if (target.matches("input")) {
     keyEventExecuted = false;
@@ -73,7 +74,7 @@ async function addTodo() {
   if (inputTag.value !== "") {
     preShowInDom();
     const data = { description: inputTag.value, done: false };
-    postRequest(data);
+    await postRequest(data);
     displayTodoItems();
     inputTag.value = "";
     /* setTimeout(() => {
